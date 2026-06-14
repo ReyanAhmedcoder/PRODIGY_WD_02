@@ -1,0 +1,12 @@
+{
+  "name": "prodigy-wd-02",
+  "version": "1.0.0",
+  "description": "Static CHRONO stopwatch app with lap tracking.",
+  "main": "script.js",
+  "author": "Reyan Ahmed",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "deploy": "echo \"Static app ready for deployment. Use GitHub Pages or any static host.\""
+  }
+}

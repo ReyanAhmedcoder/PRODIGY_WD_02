@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CHRONO — Premium Stopwatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ░░ LOADING SCREEN ░░ -->
+  <div id="loader">
+    <div class="loader-inner">
+      <div class="loader-ring"></div>
+      <div class="loader-ring loader-ring--2"></div>
+      <span class="loader-label">CHRONO</span>
+    </div>
+  </div>
+
+  <!-- ░░ PARTICLE CANVAS ░░ -->
+  <canvas id="particles"></canvas>
+
+  <!-- ░░ AMBIENT BLOBS ░░ -->
+  <div class="blob blob--violet"></div>
+  <div class="blob blob--cyan"></div>
+
+  <!-- ░░ APP SHELL ░░ -->
+  <div class="app" id="app">
+
+    <!-- NAV -->
+    <header class="nav">
+      <div class="nav__brand">
+        <span class="nav__logo">◈</span>
+        <span class="nav__name">CHRONO</span>
+      </div>
+      <div class="nav__controls">
+        <button class="icon-btn" id="btnSound" title="Toggle Sound" aria-label="Toggle sound">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" id="soundWaves"/></svg>
+        </button>
+        <button class="icon-btn" id="btnFullscreen" title="Fullscreen" aria-label="Toggle fullscreen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+        </button>
+        <button class="icon-btn" id="btnTheme" title="Toggle Theme" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <main class="layout">
+
+      <!-- ░ LEFT COLUMN — TIMER ░ -->
+      <section class="timer-col">
+
+        <!-- Status pill -->
+        <div class="status-pill" id="statusPill">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">READY</span>
+        </div>
+
+        <!-- Orbital rings + display -->
+        <div class="orbital-wrap">
+          <!-- Decorative outer orbit -->
+          <svg class="orbit orbit--outer" viewBox="0 0 400 400">
+            <circle class="orbit__track" cx="200" cy="200" r="185"/>
+            <circle class="orbit__progress" id="orbitOuter" cx="200" cy="200" r="185"
+              stroke-dasharray="1163" stroke-dashoffset="1163"/>
+          </svg>
+          <!-- Inner spin ring -->
+          <svg class="orbit orbit--inner" viewBox="0 0 400 400" id="innerOrbit">
+            <circle class="orbit__track orbit__track--inner" cx="200" cy="200" r="155"/>
+            <circle class="orbit__progress orbit__progress--inner" cx="200" cy="200" r="155"
+              stroke-dasharray="974" stroke-dashoffset="0"/>
+          </svg>
+
+          <!-- Timer face -->
+          <div class="timer-face">
+            <div class="timer-display" id="timerDisplay">
+              <span class="time-segment" id="segH">00</span>
+              <span class="time-sep">:</span>
+              <span class="time-segment" id="segM">00</span>
+              <span class="time-sep">:</span>
+              <span class="time-segment" id="segS">00</span>
+            </div>
+            <div class="timer-ms" id="timerMs">.000</div>
+            <div class="timer-sub">elapsed time</div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <button class="ctrl-btn ctrl-btn--secondary" id="btnReset" title="Reset (R)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Reset
+          </button>
+
+          <button class="ctrl-btn ctrl-btn--primary pulse" id="btnStart" title="Start/Pause (Space)">
+            <svg viewBox="0 0 24 24" fill="currentColor" id="iconStartPause"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span id="btnStartLabel">Start</span>
+          </button>
+
+          <button class="ctrl-btn ctrl-btn--secondary" id="btnLap" title="Lap (L)" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Lap
+          </button>
+        </div>
+
+        <!-- Keyboard hints -->
+        <div class="kbd-hints">
+          <span><kbd>Space</kbd> Start / Pause</span>
+          <span><kbd>L</kbd> Lap</span>
+          <span><kbd>R</kbd> Reset</span>
+        </div>
+      </section>
+
+      <!-- ░ RIGHT COLUMN — STATS + LAPS ░ -->
+      <section class="data-col">
+
+        <!-- Stats grid -->
+        <div class="stats-grid">
+          <div class="stat-card" id="statTotal">
+            <span class="stat-value" id="statTotalVal">0</span>
+            <span class="stat-label">Total Laps</span>
+          </div>
+          <div class="stat-card" id="statFastest">
+            <span class="stat-value" id="statFastestVal">—</span>
+            <span class="stat-label">Fastest</span>
+          </div>
+          <div class="stat-card" id="statSlowest">
+            <span class="stat-value" id="statSlowestVal">—</span>
+            <span class="stat-label">Slowest</span>
+          </div>
+          <div class="stat-card" id="statAvg">
+            <span class="stat-value" id="statAvgVal">—</span>
+            <span class="stat-label">Average</span>
+          </div>
+        </div>
+
+        <!-- Lap list header -->
+        <div class="laps-header">
+          <h2 class="laps-title">Lap History</h2>
+          <div class="laps-actions">
+            <button class="text-btn" id="btnExport">Export</button>
+            <button class="text-btn text-btn--danger" id="btnClearLaps">Clear</button>
+          </div>
+        </div>
+
+        <!-- Lap list -->
+        <div class="laps-list" id="lapsList">
+          <div class="laps-empty" id="lapsEmpty">
+            <span class="laps-empty__icon">◎</span>
+            <p>No laps recorded yet.<br/>Press <kbd>L</kbd> while running.</p>
+          </div>
+        </div>
+
+        <!-- Achievement section -->
+        <div class="achievements" id="achievements">
+          <h3 class="achievements__title">Milestones</h3>
+          <div class="badge-row">
+            <div class="badge" id="badge1m" data-label="1 Min">
+              <span class="badge__icon">①</span>
+              <span class="badge__name">1 Min</span>
+            </div>
+            <div class="badge" id="badge5m" data-label="5 Min">
+              <span class="badge__icon">⑤</span>
+              <span class="badge__name">5 Min</span>
+            </div>
+            <div class="badge" id="badge10m" data-label="10 Min">
+              <span class="badge__icon">⑩</span>
+              <span class="badge__name">10 Min</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- Confetti canvas -->
+  <canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
