@@ -19,8 +19,8 @@
 const state = {
   running: false,
   startTime: 0,
-  elapsed: 0,
-  lapStart: 0,
+  elapsed: 0,        // ms accumulated before latest start
+  lapStart: 0,       // elapsed at lap start
   laps: [],
   rafId: null,
   innerAngle: 0,
@@ -113,7 +113,7 @@ const dom = {
   resize();
   initPool();
   tick();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => { resize(); });
 })();
 
 /* ─── 3. TIMER LOGIC ─── */
@@ -204,14 +204,14 @@ function updateDisplay(ms) {
 
 function tickSegment(el) {
   el.classList.remove('tick');
-  void el.offsetWidth;
+  void el.offsetWidth; // reflow
   el.classList.add('tick');
   setTimeout(() => el.classList.remove('tick'), 150);
 }
 
 /* ─── 5. RING ANIMATION ─── */
-const OUTER_CIRC = 2 * Math.PI * 185;
-const MAX_MS     = 60_000;
+const OUTER_CIRC = 2 * Math.PI * 185; // ≈1163
+const MAX_MS     = 60_000;             // 1 min = full outer ring
 
 function updateRing(ms) {
   const progress = Math.min(ms / MAX_MS, 1);
@@ -234,6 +234,7 @@ function recordLap() {
 }
 
 function renderLap(lap) {
+  // Hide empty state
   dom.lapsEmpty.style.display = 'none';
 
   const card = document.createElement('div');
@@ -265,7 +266,7 @@ function highlightFastSlow() {
   const slowest = Math.max(...times);
 
   document.querySelectorAll('.lap-card').forEach(card => {
-    const n    = parseInt(card.dataset.lapN, 10);
+    const n    = parseInt(card.dataset.lapN);
     const lap  = state.laps[n - 1];
     card.classList.remove('lap-card--fastest', 'lap-card--slowest');
     if (lap.time === fastest) card.classList.add('lap-card--fastest');
@@ -326,6 +327,7 @@ function unlockMilestone(key, el) {
   launchConfetti();
 }
 
+/* Confetti */
 (function initConfetti() {
   const canvas = dom.confettiCanvas;
   const ctx    = canvas.getContext('2d');
@@ -387,23 +389,28 @@ function triggerRipple(btn) {
   btn.classList.add('ripple');
 }
 
-dom.btnStart.addEventListener('click', () => {
+// Start/Pause button
+dom.btnStart.addEventListener('click', e => {
   triggerRipple(dom.btnStart);
   state.running ? pause() : start();
 });
 
-dom.btnReset.addEventListener('click', () => {
+// Reset
+dom.btnReset.addEventListener('click', e => {
   triggerRipple(dom.btnReset);
   reset();
 });
 
-dom.btnLap.addEventListener('click', () => {
+// Lap
+dom.btnLap.addEventListener('click', e => {
   triggerRipple(dom.btnLap);
   recordLap();
 });
 
+// Clear laps
 dom.btnClearLaps.addEventListener('click', clearLaps);
 
+// Export
 dom.btnExport.addEventListener('click', exportLaps);
 
 function exportLaps() {
@@ -419,6 +426,7 @@ function exportLaps() {
   a.click();
 }
 
+// Keyboard shortcuts
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   if (e.code === 'Space')  { e.preventDefault(); state.running ? pause() : start(); }
@@ -442,6 +450,7 @@ dom.btnFullscreen.addEventListener('click', () => {
   else document.exitFullscreen();
 });
 
+/* Simple Web Audio click */
 let audioCtx;
 function playClick() {
   if (!state.sound) return;
@@ -490,12 +499,19 @@ function loadLaps() {
 
 /* ─── 12. INIT ─── */
 function init() {
+  // Restore theme
   if (localStorage.getItem('chrono-theme') === 'light') {
     document.body.classList.add('light');
   }
+
+  // Restore laps
   loadLaps();
+
+  // Initial ring position
   updateRing(0);
   updateDisplay(0);
+
+  // Hide loader, reveal app
   setTimeout(() => {
     dom.loader.classList.add('hidden');
     dom.app.classList.add('visible');
